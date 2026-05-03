@@ -107,7 +107,7 @@ const nodemailer = require("nodemailer");
 
 const token = process.env.BOT_TOKEN; // BEST WAY
 
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token);
 // templates
 const loginTemplate = require("./templates/login");
 const resetTemplate = require("./templates/reset");
@@ -211,6 +211,13 @@ bot.on("message", async (msg) => {
 
 const express = require("express");
 const app = express();
+
+app.use(express.json());
+
+app.post(`/bot${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
 
 app.get("/", (req, res) => {
   res.send("Bot is running");
