@@ -100,17 +100,20 @@
 //   } else {
 //     console.log("Email Sent:", info.response);
 //   }
-// });require("dotenv").config();
+// });
+require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const nodemailer = require("nodemailer");
 
+const token = process.env.BOT_TOKEN; // BEST WAY
+
+const bot = new TelegramBot(token, { polling: true });
 // templates
 const loginTemplate = require("./templates/login");
 const resetTemplate = require("./templates/reset");
 const deleteTemplate = require("./templates/delete");
 
 // bot init
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
 // transporter
 const transporter = nodemailer.createTransport({
