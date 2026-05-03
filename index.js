@@ -104,19 +104,23 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const nodemailer = require("nodemailer");
+const express = require("express");
 
-const token = process.env.BOT_TOKEN; // BEST WAY
+const token = process.env.BOT_TOKEN;
 
+// 🔥 BOT (WEBHOOK MODE)
 const bot = new TelegramBot(token);
+
 // templates
 const loginTemplate = require("./templates/login");
 const resetTemplate = require("./templates/reset");
 const deleteTemplate = require("./templates/delete");
+
+// debug
 console.log("BOT:", process.env.BOT_TOKEN);
 console.log("EMAIL:", process.env.EMAIL_USER);
 
-
-// transporter
+// 🔥 TRANSPORTER (GMAIL)
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -127,11 +131,8 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-await transporter.sendMail(mailOptions)
-  .then(info => console.log("SUCCESS:", info))
-  .catch(err => console.log("ERROR:", err));
-
-  transporter.verify((err, success) => {
+// 🔍 SMTP CHECK
+transporter.verify((err, success) => {
   if (err) {
     console.log("SMTP ERROR:", err);
   } else {
@@ -139,7 +140,7 @@ await transporter.sendMail(mailOptions)
   }
 });
 
-// template selector
+// 🎯 TEMPLATE SELECTOR
 function getTemplate(type, data) {
   if (type === "login") return loginTemplate(data);
   if (type === "reset") return resetTemplate(data);
@@ -147,11 +148,10 @@ function getTemplate(type, data) {
   throw new Error("Invalid template");
 }
 
-// user state
+// 🧠 USER STATE
 let userState = {};
 
-
-// 🚀 START MENU
+// 🚀 START
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, "Select mail type:", {
     reply_markup: {
@@ -164,7 +164,6 @@ bot.onText(/\/start/, (msg) => {
   });
 });
 
-
 // 🎯 BUTTON CLICK
 bot.on("callback_query", (query) => {
   const chatId = query.message.chat.id;
@@ -175,12 +174,11 @@ bot.on("callback_query", (query) => {
   bot.sendMessage(chatId, "Enter username:");
 });
 
-
 // 🧠 INPUT FLOW
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  if (msg.text.startsWith("/")) return;
+  if (!msg.text || msg.text.startsWith("/")) return;
   if (!userState[chatId]) return;
 
   const state = userState[chatId];
@@ -196,6 +194,11 @@ bot.on("message", async (msg) => {
   if (state.step === "email") {
     state.email = msg.text;
 
+    // 🔍 basic validation
+    if (!state.email.includes("@")) {
+      return bot.sendMessage(chatId, "❌ Invalid email");
+    }
+
     try {
       const template = getTemplate(state.type, {
         username: state.username,
@@ -209,12 +212,13 @@ bot.on("message", async (msg) => {
         html: template.html
       };
 
-      await transporter.sendMail(mailOptions);
+      const info = await transporter.sendMail(mailOptions);
+      console.log("MAIL SUCCESS:", info.response);
 
       bot.sendMessage(chatId, "✅ Mail Sent Successfully");
 
     } catch (err) {
-      console.log(err);
+      console.log("MAIL ERROR:", err);
       bot.sendMessage(chatId, "❌ Error sending mail");
     }
 
@@ -222,18 +226,20 @@ bot.on("message", async (msg) => {
   }
 });
 
-const express = require("express");
+// 🌐 EXPRESS SERVER
 const app = express();
 
 app.use(express.json());
 
+// 🔥 WEBHOOK ROUTE
 app.post(`/bot${token}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
+// TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("Bot is running");
+  res.send("Bot is running 🚀");
 });
 
 const PORT = process.env.PORT || 3000;
