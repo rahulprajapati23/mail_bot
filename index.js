@@ -217,13 +217,24 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running on port", PORT));
 
-transporter.sendMail(mailOptions, (error, info) => {
-  if (error) {
-    console.log("❌ FULL ERROR:", error);
-  } else {
-    console.log("✅ Email Sent:", info.response);
-  }
-});
+bot.on("message", (msg) => {
+  const toEmail = "rahul2100007@gmail.com";
+  const username = "Rahul";
 
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
+  // 👇 यहीं बनाओ
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: toEmail,
+    subject: "Test Mail",
+    html: `<h1>Hello ${username}</h1>`
+  };
+
+  // 👇 यहीं send करो
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log("Error:", error);
+    } else {
+      console.log("Email Sent:", info.response);
+    }
+  });
+});
