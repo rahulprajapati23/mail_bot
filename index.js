@@ -216,3 +216,14 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running on port", PORT));
+
+transporter.sendMail(mailOptions, (error, info) => {
+  if (error) {
+    console.log("❌ FULL ERROR:", error);
+  } else {
+    console.log("✅ Email Sent:", info.response);
+  }
+});
+
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
