@@ -112,14 +112,13 @@ const bot = new TelegramBot(token, { polling: true });
 const loginTemplate = require("./templates/login");
 const resetTemplate = require("./templates/reset");
 const deleteTemplate = require("./templates/delete");
+console.log("BOT:", process.env.BOT_TOKEN);
+console.log("EMAIL:", process.env.EMAIL_USER);
 
-// bot init
 
 // transporter
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
@@ -219,25 +218,3 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running on port", PORT));
-
-bot.on("message", (msg) => {
-  const toEmail = "rahul2100007@gmail.com";
-  const username = "Rahul";
-
-  // 👇 यहीं बनाओ
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: toEmail,
-    subject: "Test Mail",
-    html: `<h1>Hello ${username}</h1>`
-  };
-
-  // 👇 यहीं send करो
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log("Error:", error);
-    } else {
-      console.log("Email Sent:", info.response);
-    }
-  });
-});
