@@ -101,12 +101,14 @@
 //     console.log("Email Sent:", info.response);
 //   }
 // });
+
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
-const nodemailer = require("nodemailer");
 const express = require("express");
+const { Resend } = require("resend");
 
 const token = process.env.BOT_TOKEN;
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // 🔥 BOT (WEBHOOK MODE)
 const bot = new TelegramBot(token);
@@ -118,27 +120,7 @@ const deleteTemplate = require("./templates/delete");
 
 // debug
 console.log("BOT:", process.env.BOT_TOKEN);
-console.log("EMAIL:", process.env.EMAIL_USER);
-
-// 🔥 TRANSPORTER (GMAIL)
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-// 🔍 SMTP CHECK
-transporter.verify((err, success) => {
-  if (err) {
-    console.log("SMTP ERROR:", err);
-  } else {
-    console.log("SMTP READY");
-  }
-});
+console.log("RESEND KEY:", process.env.RESEND_API_KEY);
 
 // 🎯 TEMPLATE SELECTOR
 function getTemplate(type, data) {
@@ -194,7 +176,6 @@ bot.on("message", async (msg) => {
   if (state.step === "email") {
     state.email = msg.text;
 
-    // 🔍 basic validation
     if (!state.email.includes("@")) {
       return bot.sendMessage(chatId, "❌ Invalid email");
     }
@@ -205,15 +186,15 @@ bot.on("message", async (msg) => {
         email: state.email
       });
 
-      const mailOptions = {
-        from: `"Security Team" <${process.env.EMAIL_USER}>`,
+      // 🔥 RESEND MAIL
+      const response = await resend.emails.send({
+        from: `Security Team <${process.env.EMAIL_USER}>`,
         to: state.email,
         subject: template.subject,
         html: template.html
-      };
+      });
 
-      const info = await transporter.sendMail(mailOptions);
-      console.log("MAIL SUCCESS:", info.response);
+      console.log("MAIL SUCCESS:", response);
 
       bot.sendMessage(chatId, "✅ Mail Sent Successfully");
 
@@ -228,7 +209,6 @@ bot.on("message", async (msg) => {
 
 // 🌐 EXPRESS SERVER
 const app = express();
-
 app.use(express.json());
 
 // 🔥 WEBHOOK ROUTE
