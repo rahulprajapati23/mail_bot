@@ -127,6 +127,18 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+await transporter.sendMail(mailOptions)
+  .then(info => console.log("SUCCESS:", info))
+  .catch(err => console.log("ERROR:", err));
+
+  transporter.verify((err, success) => {
+  if (err) {
+    console.log("SMTP ERROR:", err);
+  } else {
+    console.log("SMTP READY");
+  }
+});
+
 // template selector
 function getTemplate(type, data) {
   if (type === "login") return loginTemplate(data);
